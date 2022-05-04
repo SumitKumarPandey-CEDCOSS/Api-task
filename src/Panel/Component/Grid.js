@@ -204,7 +204,9 @@ export default class Grid extends Base {
             Object.keys(this.state.columns).map((data) => {
                 if (this.state.columns[data].i_agree == true) {
                     nextRow.push(li[data]);
-                }
+                } else {
+                    //removing the heading columns from the nextRow object
+                    nextRow.push([]);
             });
             rows.push(nextRow);
             nextRow = [];
