@@ -1,4 +1,4 @@
-import { Page, Card, DataTable, Pagination, Select, ButtonGroup, TextStyle, DisplayText, Button, Checkbox, Collapsible, Stack } from "@shopify/polaris";
+import { Page, Card, DataTable, Pagination, Select, ButtonGroup, TextStyle, DisplayText, Button, Checkbox, Collapsible, Stack, TextField } from "@shopify/polaris";
 import { Base } from "../../core";
 import React, { useState } from "react";
 import "@shopify/polaris/dist/styles.css";
@@ -10,44 +10,53 @@ export default class Grid extends Base {
 
         super(props);
         this.state = {
-            data: "", list: [], page: 100, activePage: 1, pageFrom: 0, pageStart: 10, totalCount: 0, expanded: true, open: false,
+            data: "", list: [], page: 100, activePage: 1, pageFrom: 0, pageStart: 10, totalCount: 0, expanded: true, open: false, status: true,
             columns: {
                 // Id: {
                 //     name: "Id",
                 // },
                 user_id: {
-                    name: "UserId",
+                    lable: "UserId",
+                    name: "user_id",
                     i_agree: true,
                 },
                 catalog: {
+                    lable: "Catalog",
                     name: "Catalog",
                     i_agree: true,
                 },
                 username: {
-                    name: "Shop domain",
+                    lable: "Shop domain",
+                    name: "shops.domain",
                     i_agree: true,
                 },
                 email: {
-                    name: "Shop email",
+                    lable: "Shop email",
+                    name: "shops.email",
                     i_agree: true,
                 },
                 shopify_plan: {
-                    name: "Shop Plan name",
+                    lable: "Shop Plan name",
+                    name: "shops.plan_name",
                     i_agree: true,
                 },
                 updated_at: {
+                    lable: "Updated at",
                     name: "Updated at",
                     i_agree: true,
                 },
                 created_at: {
+                    lable: "Created at",
                     name: "Created at",
                     i_agree: true,
                 },
                 shop_url: {
-                    name: "Shops myshopify_domain",
+                    lable: "Shops myshopify domain",
+                    name: "shops.myshopify_domain",
                     i_agree: true,
                 },
             },
+            filter: ``,
             row: []
         };
     }
@@ -55,12 +64,14 @@ export default class Grid extends Base {
     fetch() {
 
         this.requests
-            .getRequest('frontend/admin/getAllUsers', { activePage: this.state.activePage, count: this.state.page })
+            .getRequest(`frontend/admin/getAllUsers?activePage=${this.state.activePage}&count=${this.state.page}${this.state.filter}`)
+
             .then((success) => {
                 this.setState({
                     list: [],
                     data: success,
                 });
+                console.log(success)
                 Object.keys(this.state.data).forEach((val) => {
 
                     if (val === "data") {
@@ -155,6 +166,7 @@ export default class Grid extends Base {
                         </div>
                     </Collapsible>
                 </Stack>
+
             </Card >
         );
     }
@@ -195,32 +207,96 @@ export default class Grid extends Base {
         );
     }
 
+    filter() {
+        let filter = ``
+       
+        Object.keys(this.state.columns).map(val => {
+            if (this.state.columns[val].textVal != '' && this.state.columns[val].textVal != undefined) {
+                filter = `+&filter[${this.state.columns[val].name}][${this.state.columns[val].selectVal}]=${this.state.columns[val].textVal}`
+            }
+            console.log(filter);
+            this.setState({
+                filter: filter
+            }, () => {
+                if (this.state.status == true) {
+                    this.fetch()
+                    this.state.status = false
+                }
+
+            })
+        })
+        this.setState({ status: true })
+    }
+
     DataTable() {
 
         let rows = [];
         var nextRow = [];
+
+        const options = [
+            { label: "Equals", value: "1" },
+            { label: "Not Equals", value: "2" },
+            { label: "Contains", value: "3" },
+            { label: "Does Not Contains", value: "4" },
+            { label: "Starts With", value: "5" },
+            { label: "Ends With", value: "6" },
+        ];
 
         this.state.list.map((li) => {
             Object.keys(this.state.columns).map((data) => {
                 if (this.state.columns[data].i_agree == true) {
                     nextRow.push(li[data]);
                 } else {
-                    //removing the heading columns from the nextRow object
                     nextRow.push([]);
+                }
             });
             rows.push(nextRow);
+            // console.log(nextRow);
             nextRow = [];
         });
+        let fields = [];
+        Object.keys(this.state.columns).map((val) => {
+            if (this.state.columns[val].i_agree == true) {
+                fields.push([[<Select
+                    options={options}
+                    value={this.state.columns[val].selectVal}
+                    onChange={(e) => {
+                        this.setState(
+                            () => {
+                                this.state.columns[val].selectVal = e
+                            }, () => {
+                                this.filter()
+                            }
+                        )
+                    }
+                    } />],
+                [<TextField
+                    value={this.state.columns[val].textVal}
+                    onChange={(e) => {
+                        this.setState(
+                            () => {
+                                this.state.columns[val].textVal = e
+                            }, () => {
+                                this.filter()
+                            }
+                        )
+                    }} placeholder={val} />]])
+            }else {
+                return fields.push([]);
+            }
+        });
+
+        rows.unshift(fields);
 
         return (
+
             <DataTable
                 columnContentTypes={[
-                    'text',
                     'text',
                 ]}
                 headings={Object.keys(this.state.columns).map((data) => {
                     if (this.state.columns[data].i_agree == true) {
-                        return <h3><TextStyle variation="strong">{this.state.columns[data].name}</TextStyle></h3>
+                        return <h3><TextStyle variation="strong">{this.state.columns[data].lable}</TextStyle></h3>
                     }
                 })}
                 rows={rows}
