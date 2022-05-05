@@ -1,6 +1,6 @@
-import { Page, Card, DataTable, Pagination, Select, ButtonGroup, TextStyle, DisplayText, Button, Checkbox, Collapsible, Stack, TextField } from "@shopify/polaris";
+import { Page, Card, DataTable, Pagination, Select, ButtonGroup, TextStyle, DisplayText, Button, Checkbox, Collapsible, Stack, TextField, Modal, TextContainer } from "@shopify/polaris";
 import { Base } from "../../core";
-import React, { useState } from "react";
+import React from "react";
 import "@shopify/polaris/dist/styles.css";
 
 
@@ -55,6 +55,20 @@ export default class Grid extends Base {
                     name: "shops.myshopify_domain",
                     i_agree: true,
                 },
+                loginBtn: {
+                    lable: "Login",
+                    name: "Login",
+                    i_agree: true,
+                    type: "button",
+                    type2: true,
+                },
+                viewBtn: {
+                    lable: "View",
+                    name: "View",
+                    i_agree: true,
+                    type: "View",
+                    type2: true,
+                },
             },
             filter: ``,
             row: []
@@ -71,7 +85,7 @@ export default class Grid extends Base {
                     list: [],
                     data: success,
                 });
-                console.log(success)
+                // console.log(success)
                 Object.keys(this.state.data).forEach((val) => {
 
                     if (val === "data") {
@@ -183,6 +197,36 @@ export default class Grid extends Base {
                 </div>
 
                 <Card sectioned subdued>{this.DataTable()}</Card>
+                <div style={{ height: '500px' }}>
+                    <Modal
+
+                        open={this.state.active}
+                        onClose={() => {
+                            this.setState({ active: false });
+                        }}
+                        title="Reach more shoppers with Instagram product tags"
+                        primaryAction={{
+                            content: 'Add Instagram',
+                            // onAction: this.state.active,
+                        }}
+                        secondaryActions={[
+                            {
+                                content: 'Learn more',
+                                // onAction: this.state.active,
+                            },
+                        ]}
+                    >
+                        <Modal.Section>
+                            <TextContainer>
+                                <p>
+                                    Use Instagram posts to share your products with millions of
+                                    people. Let shoppers buy from your store without leaving
+                                    Instagram.
+                                </p>
+                            </TextContainer>
+                        </Modal.Section>
+                    </Modal>
+                </div>
             </Page>
         );
     }
@@ -209,7 +253,7 @@ export default class Grid extends Base {
 
     filter() {
         let filter = ``
-       
+
         Object.keys(this.state.columns).map(val => {
             if (this.state.columns[val].textVal != '' && this.state.columns[val].textVal != undefined) {
                 filter = `+&filter[${this.state.columns[val].name}][${this.state.columns[val].selectVal}]=${this.state.columns[val].textVal}`
@@ -245,43 +289,94 @@ export default class Grid extends Base {
         this.state.list.map((li) => {
             Object.keys(this.state.columns).map((data) => {
                 if (this.state.columns[data].i_agree == true) {
-                    nextRow.push(li[data]);
+                    if (this.state.columns[data].type2 != true) {
+                        nextRow.push(li[data]);
+                    } else if (this.state.columns[data].type === "button") {
+                        nextRow.push(
+                            <Button
+                                primary
+                                onClick={() => {
+                                    this.setState(
+                                        {
+                                            UserId: li.user_id,
+                                        },
+                                        () => {
+                                            this.requests
+                                                .getRequest(
+                                                    "frontend/admin/getLoginAsUserUrl?db=db&user_id=" +
+                                                    this.state.UserId
+                                                )
+                                                .then((msg) => {
+                                                    this.setState(
+                                                        {
+                                                            url: msg.data,
+                                                        },
+                                                        () => {
+                                                            window.open(this.state.url);
+                                                        }
+                                                    );
+                                                });
+                                        }
+                                    );
+                                }}
+                            >
+                                Login
+                            </Button>
+                        );
+                    } else if (this.state.columns[data].type === "View") {
+                        nextRow.push([
+                            <Button
+                                primary
+                                onClick={() => {
+                                    this.setState({
+                                        active: !this.state.active,
+                                    });
+                                }}
+                            >View User
+                            </Button>,
+                        ]);
+                    }
                 } else {
                     nextRow.push([]);
                 }
             });
             rows.push(nextRow);
-            // console.log(nextRow);
+
             nextRow = [];
         });
         let fields = [];
+
         Object.keys(this.state.columns).map((val) => {
             if (this.state.columns[val].i_agree == true) {
-                fields.push([[<Select
-                    options={options}
-                    value={this.state.columns[val].selectVal}
-                    onChange={(e) => {
-                        this.setState(
-                            () => {
-                                this.state.columns[val].selectVal = e
-                            }, () => {
-                                this.filter()
-                            }
-                        )
-                    }
-                    } />],
-                [<TextField
-                    value={this.state.columns[val].textVal}
-                    onChange={(e) => {
-                        this.setState(
-                            () => {
-                                this.state.columns[val].textVal = e
-                            }, () => {
-                                this.filter()
-                            }
-                        )
-                    }} placeholder={val} />]])
-            }else {
+                if ((this.state.columns[val].type2 != true)) {
+                    fields.push([[<Select
+                        options={options}
+                        value={this.state.columns[val].selectVal}
+                        onChange={(e) => {
+                            this.setState(
+                                () => {
+                                    this.state.columns[val].selectVal = e
+                                }, () => {
+                                    this.filter()
+                                }
+                            )
+                        }
+                        } />],
+                    [<TextField
+                        value={this.state.columns[val].textVal}
+                        onChange={(e) => {
+                            this.setState(
+                                () => {
+                                    this.state.columns[val].textVal = e
+                                }, () => {
+                                    this.filter()
+                                }
+                            )
+                        }} placeholder={val} />]])
+                } else {
+                    return fields.push([]);
+                }
+            } else {
                 return fields.push([]);
             }
         });
@@ -301,6 +396,7 @@ export default class Grid extends Base {
                 })}
                 rows={rows}
             />
+
         );
     }
 }
