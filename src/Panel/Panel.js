@@ -36,6 +36,11 @@ export class Panel extends Base {
                             icon: ProductsMajor,
                             onClick: () => this.props.history.push('/panel/grid')
                         },
+                        {
+                            label: 'Chart',
+                            icon: ProductsMajor,
+                            onClick: () => this.props.history.push('/panel/chart')
+                        },
                     ]}
                 />
             </Navigation>

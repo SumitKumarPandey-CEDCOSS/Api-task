@@ -1,21 +1,23 @@
 import React, { Component } from 'react'
 import {Page, Card,TextField,Banner, Label} from '@shopify/polaris';
 import { Base } from '../../core';
+import { Chart } from './Chart';
+import { PieChart } from './PieChart';
+import { LineChart } from './LineChart';
+
 class Dashboard extends Base {
-
-    constructor(){
-        super()
-    }
-
+    
     render() {
         return (
             <Page title="Dashboard">
                 <Card sectioned>
-                    <Banner status="info">
-                        <Label>
-                            Write your Code here
-                        </Label>
-                    </Banner>
+                    <Chart />
+                </Card>
+                <Card sectioned >
+                    <PieChart />
+                </Card>
+                <Card sectioned >
+                    <LineChart />
                 </Card>
             </Page>
         )
