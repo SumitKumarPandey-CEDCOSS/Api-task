@@ -3,8 +3,8 @@ import {Page, Card,TextField,Banner, Label} from '@shopify/polaris';
 import { Base } from '../../core';
 import { Chart } from './Chart';
 import { PieChart } from './PieChart';
-import { LineChart } from './LineChart';
-
+// import { LineChart } from './LineChart';
+import HorizontalChart from './Horizontalchart';
 class Dashboard extends Base {
     
     render() {
@@ -16,8 +16,11 @@ class Dashboard extends Base {
                 <Card sectioned >
                     <PieChart />
                 </Card>
-                <Card sectioned >
+                {/* <Card sectioned >
                     <LineChart />
+                </Card> */}
+                <Card sectioned >
+                {<HorizontalChart />}
                 </Card>
             </Page>
         )
